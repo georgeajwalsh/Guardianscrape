@@ -1,8 +1,7 @@
 
-WEB SCRAPE-OUTPUT 1
+**WEB SCRAPE-OUTPUT 1**
 
-1.imports: 
-requests allows us to make requests to websites,import pandas as pd is useful for working with tables,import random allows us to generate random items,import os is useful for interacting with computer, from datetime import datetime,timedelta gives us access for tools for working with dates and times
+1.Imports:requests allows us to make requests to websites,import pandas as pd is useful for working with tables,import random allows us to generate random items,import os is useful for interacting with computer, from datetime import datetime,timedelta gives us access for tools for working with dates and times.
 
 `import requests
 import pandas as pd
@@ -10,30 +9,26 @@ import random
 import os
 from datetime import datetime, timedelta`
 
-2.setup: 
-API_KEY is the personal key that gives us access to the guardians content API, BASE_URL is the web adress we will be pulling data from, FILE_NAME is where we will be saving the data we collect and NUM_WEEKS specifies how many weeks of data we will look at 
+2.Setup: API_KEY is the personal key that gives us access to the guardians content API, BASE_URL is the web adress we will be pulling data from, FILE_NAME is where we will be saving the data we collect and NUM_WEEKS specifies how many weeks of data we will look at. 
 
 `API_KEY = "998344a2-04a1-4410-9d53-1490cfa2e9d2"
 BASE_URL = "https://content.guardianapis.com/search"
 FILE_NAME = "guardian_articles.csv"
 NUM_WEEKS = 580`
 
-3.date generation: 
-the start_date finds todays date, dates creates a list of dates one per week working backwards from todays dates fomatting as "2023-06-30"
+3.Date generation: the start_date finds todays date, dates creates a list of dates one per week working backwards from todays dates fomatting as "2023-06-30".
 
 `start_date = datetime.today()
 dates = [(start_date - timedelta(weeks=i)).strftime("%Y-%m-%d") for i in range(NUM_WEEKS)]`
 
-4.check for previous data/create dataframe 
-os.path.exists check if the FILE_NAME previouslyb specified already exists on our computer if not it creates an empty dataframe with the relevant columns
+4.Check for previous data/create dataframe: os.path.exists check if the FILE_NAME previouslyb specified already exists on our computer if not it creates an empty dataframe with the relevant columns.
 
 `if os.path.exists(FILE_NAME):
     df = pd.read_csv(FILE_NAME)
 else:
     df = pd.DataFrame(columns=["headline", "publication_date", "url"])`
 
-5.fetch articles for each week
-first for week_date in dates is a forloop iterating through each date, params sets up the API paramaters for the given date such that it i for the given date showing headlines and picks up to 10 articles per day. Response then requests the guardian API for our given parameters if response.status_code then checks if the request went through with 200 meaning 'OK' if this condition is met this will convert the respone into readable data grabbing the relevant data. the following if function if articles checks if we got any articles for that given date if so it keeps going such that selected_article will pick a random article. aricle_data creates a small dictionary with the atricle title, publication date and URL where it can be read. df= saves our new article to the existing table df and then df.to_csv saves the whole updated file back to CSV file.. The rest of the code is used to adress issues with colection such that the first print gives us a little sucessa message to see that something was saved for that date with the follwoing print in the else command telling us if nothing came up for given day and the following else will tell us it failed to fetch with the status code so I can see what went wrong. FIaly wants the loop is complete I print a data collection complete message
+5.Fetch articles for each week:first for week_date in dates is a forloop iterating through each date, params sets up the API paramaters for the given date such that it i for the given date showing headlines and picks up to 10 articles per day. Response then requests the guardian API for our given parameters if response.status_code then checks if the request went through with 200 meaning 'OK' if this condition is met this will convert the respone into readable data grabbing the relevant data. the following if function if articles checks if we got any articles for that given date if so it keeps going such that selected_article will pick a random article. aricle_data creates a small dictionary with the atricle title, publication date and URL where it can be read. df= saves our new article to the existing table df and then df.to_csv saves the whole updated file back to CSV file.. The rest of the code is used to adress issues with colection such that the first print gives us a little sucessa message to see that something was saved for that date with the follwoing print in the else command telling us if nothing came up for given day and the following else will tell us it failed to fetch with the status code so I can see what went wrong. FIaly wants the loop is complete I print a data collection complete message.
 
 `for week_date in dates:
     params = {
@@ -69,3 +64,273 @@ first for week_date in dates is a forloop iterating through each date, params se
         print(f"Failed to fetch data for {week_date}: {response.status_code}")
 
 print(" Data collection complete!")`
+
+IMPORT GDP-OUTPUT 2
+
+1.This calls the GDP.csv by locating it within my file directory skipping 4 rows as these are empty saving to df_gdp.
+
+`df_gdp = pd.read_csv('/Users/georgewalsh/Desktop/API_NY/GDP.csv', skiprows=4)  # Skip the first 4 rows which contain metadata`
+
+2.df_gdp_cleaned calls only the collumns of interest.
+
+`df_gdp_cleaned = df_gdp[['Country Name','2014','2015','2016','2017','2018','2019', '2020', '2021', '2022','2023']]`
+
+3.gdp_columns is all the columns containing data of interest we then convert all these values to numeric
+
+`gdp_columns = ['2014','2015','2016','2017','2018','2019', '2020', '2021', '2022', '2023']
+df_gdp_cleaned[gdp_columns] = df_gdp_cleaned[gdp_columns].apply(pd.to_numeric, errors='coerce')  # Convert values`
+
+4.We then create a new column total GDP which summarises the data in all our columns of interest.
+
+`df_gdp_cleaned['Total GDP'] = df_gdp_cleaned[gdp_columns].sum(axis=1)`
+
+5.Finnally we test the success of our table manipulation by calling the first 5 lines of our dataframe.
+
+`df_gdp_cleaned.head()`
+
+**VISUALISATION COUNTRY MENTIONS AGAINST TOTAL GDP**
+
+1.Imports given we have already imported the majority of packages only need need import lowess this function is used for statsmodels in our case its for a smoothes line of best fit.
+
+`from statsmodels.nonparametric.smoothers_lowess import lowess`
+
+2.Target countries specifies the list of countries we will be performing analysis on.
+
+`target_countries = [
+    'United States', 'China', 'Japan', 'Germany', 
+    'India', 'United Kingdom', 'France', 'Italy',
+    'Canada', 'Brazil', 'Russia', 'South Korea'
+    ]`
+
+3.Country variants ensure we account for varations of the words in our hedline to minimise the number of articles discussuing these countries that are missed.
+
+`country_variants = {
+    'United States': ['United States', 'USA', 'US', 'America'],
+    'United Kingdom': ['United Kingdom', 'UK', 'Britain'],
+    'China': ['China'],
+    'Japan': ['Japan'],
+    'Germany': ['Germany'],
+    'India': ['India'],
+    'France': ['France'],
+    'Italy': ['Italy'],
+    'Canada': ['Canada'],
+    'Brazil': ['Brazil'],
+    'Russia': ['Russia'],
+    'South Korea': ['South Korea']
+}`
+
+4.This creates an empty disctionary to store our mentions. For each country and it variants ot will create a regex pattern to math whole words only and counts how many headlines contain each variant and sums across all variants in the country storing the total in a dictionary.
+
+`country_mentions = {}
+for country, variants in country_variants.items():
+    total = 0
+    for variant in variants:
+        pattern = r'\b' + re.escape(variant) + r'\b'
+        count = df['headline'].str.contains(pattern, case=False, regex=True).sum()
+        total += count
+    country_mentions[country] = total`
+
+5.Creates a list of mention counts in the same order as target_countries.
+
+`mentions_counts = [country_mentions[country] for country in target_countries]`
+
+6.This filters the GDP dataframe to only include our countries of interest and also converts country names to a catagorical variable with our specified ordr and sorts the dataframe to match our target order.
+
+`df_filtered = df_gdp_cleaned[df_gdp_cleaned['Country Name'].isin(target_countries)]
+df_filtered['Country Name'] = pd.Categorical(
+    df_filtered['Country Name'], 
+    categories=target_countries,
+    ordered=True
+    )
+df_filtered = df_filtered.sort_values('Country Name')`
+
+7.Creates a figure containing both our subplots.
+
+`plt.figure(figsize=(14, 10))`
+
+8.For our first plot this creates the top plot making a bar chart of mention counts using distinct colours to aid the ability to distinguish between countries in my visualisation.
+
+`plt.subplot(2, 1, 1)
+bars = plt.bar(target_countries, mentions_counts, color=plt.cm.tab20.colors[:12])`
+
+9.This adds counnt labels to each bar by iterating through each bar in the chart retreiving the value on the y axis and then adds text to the specific coordinate such that it finds the left position of the bar then adds half the width of teh bar for central top of each bar.
+
+`for bar in bars:
+    height = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width()/2., height,
+             f'{int(height)}', ha='center', va='bottom')`
+
+10. This creates a smoothed red trend line through the bar heights.
+
+`mentions_smoothed = lowess(mentions_counts, np.arange(len(target_countries)), frac=0.3)
+plt.plot(target_countries, mentions_smoothed[:, 1], color='red', lw=2, label='Trend Line')`
+
+11.This is general formatting such that it adds a title, rotates our x-ticks, adds grid lines abd a legend. 
+
+`plt.title('Country Mentions in Headlines (Top 12 Economies)')
+plt.ylabel('Number of Mentions')
+plt.xticks(rotation=45, ha='right')
+plt.grid(axis='y', alpha=0.3)
+plt.legend()`
+
+12. This creates a second subplot in the bottom plot this creates a bar chart using the viridis colourmap.
+
+`plt.subplot(2, 1, 2)
+sns.barplot(x='Country Name', y='Total GDP', data=df_filtered, palette='viridis', order=target_countries)`
+
+13. General formatting of our second plot
+
+`plt.xlabel('Country')
+plt.ylabel('Total GDP in Trillions(in USD)')
+plt.title('Total GDP of Top 12 Economies')
+plt.xticks(rotation=45, ha='right')
+plt.grid(axis='y', alpha=0.3)`
+
+14.Final formatting that ensures propere spacing between subplots and displays the final visualisation
+
+`plt.legend()
+plt.tight_layout()
+plt.show()`
+
+**WAR DDF IMPORT- OUTPUT 3**
+
+1.Utalises the pandas function read the csv into the df_war dataframe skipping the first 4 rows off the file 
+
+`df_war =pd.read_csv('/Users/georgewalsh/Documents/battle/battledata.csv',skiprows=4)`
+
+2.This creates a new dataframe which only stores our columns of interest 
+
+`df_war_cleaned = df_war[['Country Name','2014','2015','2016','2017','2018','2019', '2020', '2021', '2022','2023']]`
+
+3.This creates a list of years from 2014 to 2023 storing as strings
+
+`year_columns = [str(year) for year in range(2014, 2024)]`
+
+4.This adds a new total column to df_war_cleaned by summing all the year columns
+
+`df_war_cleaned['Total'] = df_war_cleaned[year_columns].sum(axis=1)`
+
+5. THis verifies it works by calling the first 5 rows
+
+`df_war_cleaned.head()`
+
+**COMPARISON OF TOTAL DEATHS AND WAR MENTIONS **
+
+
+1. This first defines our countries of interest
+
+`key_countries = ['Ukraine', 'Russia', 'United States', 'Sudan', 'United Kingdom',
+                 'Afghanistan', 'Ethiopia', 'Iraq']`
+
+2.This accounts for all variations of the word 
+
+`country_variations = {
+    'Ukraine': ['ukraine'],
+    'Russia': ['russia'],
+    'Iraq': ['iraq'],
+    'United Kingdom': ['united kingdom', 'uk'],
+    'United States': ['united states', 'us', 'usa'],
+    'Ethiopia': ['ethiopia'],
+    'Afghanistan': ['afghanistan'],
+    'Sudan': ['sudan']
+}`
+
+3. This ensures our headlines are stored in lowercase
+
+`df['headline_lower'] = df['headline'].str.lower()`
+
+4. This creates an empty dictionary
+
+`mention_counts = {}`
+
+5(a).This loops throug each country and its variations
+
+`for country, variations in country_variations.items():`
+
+ (b) this creates a boolean mask for headlines containing "war" or "conflict"
+
+ `mask = df['headline_lower'].str.contains(r'\b(war|conflict)\b', case=False)`
+
+ (c) This combines with another mask checking for any country variation in the text
+
+ `country_mask = mask & df['headline_lower'].apply(
+        lambda text: any(variant in text for variant in variations)`
+
+ (d) This counts the matches and stores in a dictionary
+
+ `mention_counts[country] = country_mask.sum()`
+
+6.This converts the dictionary to a DataFrame with columns Country abd Mentions
+
+`mentions_df = pd.DataFrame(list(mention_counts.items()), columns=['Country', 'Mentions'])`
+
+7.This filters the war deaths data to only include our key countries
+
+`df_war_subset = df_war_cleaned[df_war_cleaned['Country Name'].isin(key_countries)]`
+
+8.This will sort our dataframe by total deaths in descending order
+
+`df_war_subset = df_war_subset.sort_values('Total', ascending=False)`
+
+9. This creates a 2 row, 1 column figure and sets the figure size to 12x12 inches
+
+`fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12))`
+
+10. THis plots the first total deaths plot in the colour sky blue seperating by country
+
+`bars1 = ax1.bar(df_war_subset['Country Name'], df_war_subset['Total'], color='skyblue')`
+
+11.This formats the figure adding a title,y axis label and faint dotted grid lines on y-axis
+
+`ax1.set_title('Total Deaths (2014–2023)', fontsize=14)
+ax1.set_ylabel('Total Deaths')
+ax1.grid(axis='y', linestyle=':', alpha=0.5)`
+
+12. This adds formatted value labels to each bar using the same method as before but adding thousand separators
+
+`for bar in bars1:
+    height = bar.get_height()
+    ax1.text(bar.get_x() + bar.get_width()/2., height, f'{int(height):,}', 
+             ha='center', va='bottom', fontsize=10)`
+
+13.This plots our second plot mentions reordering mentions data to match deaths plot order
+
+`mentions_df = mentions_df[mentions_df['Country'].isin(key_countries)]
+mentions_df = mentions_df.set_index('Country').loc[df_war_subset['Country Name']].reset_index()`
+
+14.Prepare's data for smoothing by extracting x and y values
+
+`x_vals = np.arange(len(mentions_df))
+y_vals = mentions_df['Mentions'].values`
+
+15. This creates a smooth trend line using spline nterpolation only if there are enough data points plotted as a dash line
+
+`if len(x_vals) > 2:
+    x_smooth = np.linspace(x_vals.min(), x_vals.max(), 300)
+    spline = make_interp_spline(x_vals, y_vals, k=2)  # you can adjust 'k' for curve smoothness
+    y_smooth = spline(x_smooth)
+    ax2.plot(x_smooth, y_smooth, color='darkred', linestyle='--', linewidth=2, label='Smoothed Trend')`
+
+16.This creates  bar plot of mentions in cornflower blue 
+
+`bars2 = ax2.bar(mentions_df['Country'], mentions_df['Mentions'], color='cornflowerblue')`
+
+17.This formats our graph adding titles, grid lines on y axis and rotating labels for readability 
+
+`ax2.set_title('Mentions of "War" or "Conflict" in Headlines', fontsize=14)
+ax2.set_ylabel('Number of Mentions')
+ax2.set_xticklabels(mentions_df['Country'], rotation=30)
+ax2.grid(axis='y', linestyle=':', alpha=0.5)`
+
+18. This adds value lavels above bars simular to first plot
+
+`for bar in bars2:
+    height = bar.get_height()
+    ax2.text(bar.get_x() + bar.get_width()/2., height, f'{height}', 
+             ha='center', va='bottom', fontsize=10)`
+
+19.Final formatting
+
+`plt.tight_layout()
+plt.show()`
+
