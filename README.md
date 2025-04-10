@@ -1,6 +1,7 @@
 
 **WEB SCRAPE-OUTPUT 1**
 
+
 1.Imports:requests allows us to make requests to websites,import pandas as pd is useful for working with tables,import random allows us to generate random items,import os is useful for interacting with computer, from datetime import datetime,timedelta gives us access for tools for working with dates and times.
 
 `import requests
@@ -65,7 +66,8 @@ else:
 
 print(" Data collection complete!")`
 
-IMPORT GDP-OUTPUT 2
+**IMPORT GDP-OUTPUT 2**
+
 
 1.This calls the GDP.csv by locating it within my file directory skipping 4 rows as these are empty saving to df_gdp.
 
@@ -89,6 +91,7 @@ df_gdp_cleaned[gdp_columns] = df_gdp_cleaned[gdp_columns].apply(pd.to_numeric, e
 `df_gdp_cleaned.head()`
 
 **VISUALISATION COUNTRY MENTIONS AGAINST TOTAL GDP**
+
 
 1.Imports given we have already imported the majority of packages only need need import lowess this function is used for statsmodels in our case its for a smoothes line of best fit.
 
@@ -193,6 +196,7 @@ plt.tight_layout()
 plt.show()`
 
 **WAR DDF IMPORT- OUTPUT 3**
+
 
 1.Utalises the pandas function read the csv into the df_war dataframe skipping the first 4 rows off the file 
 
@@ -332,5 +336,180 @@ ax2.grid(axis='y', linestyle=':', alpha=0.5)`
 19.Final formatting
 
 `plt.tight_layout()
+plt.show()`
+
+**PARTY DATA**
+
+
+1.This reads the excel file indicating the headers are in row 9
+
+`df_pol = pd.read_excel('/Users/georgewalsh/Documents/pivottablefull.xlsx', header=8)`
+
+2.This filters the data to only include rows where 'Data' column equals 'Sum of Vote' and then only selecting the 'Party' column and and the years '2015','2017' and '2019' then creating a new dataframe with this subset of data 
+
+`df_vote = df_pol[df_pol['Data'] == 'Sum of Vote'][['Party', 2015, 2017, 2019]]`
+
+3.This creates a new column 'Total Votes' which calculates the sum of votes across the three election years in a row-wise summation
+
+`df_vote['Total Votes'] = df_vote[[2015, 2017, 2019]].sum(axis=1)`
+
+4.This calculates the grand total of all votes across parties
+
+`total_all_parties = df_vote['Total Votes'].sum()`
+
+5.Creates a new column 'Percentage' which calculates each parties percentage by total vote 
+
+`df_vote['Percentage'] = (df_vote['Total Votes'] / total_all_parties) * 100`
+
+6.Replaces abbreviated party names with their full names using a dictionary mapping
+
+`df_vote['Party'] = df_vote['Party'].replace({
+    'CON': 'Conservative',
+    'LAB': 'Labour',
+    'LIB': 'Lib Dem',
+    'NAT': 'Scotish National Party'
+})`
+
+7.Filters out usinf '~' logic (not) and isin to remove 'MIN' and 'OTH' parties
+
+`df_vote = df_vote[~df_vote['Party'].isin(['MIN', 'OTH'])]`
+
+8.This orders the dataframe by percentage column in order largest to smallest percentage
+
+`df_vote = df_vote.sort_values('Percentage', ascending=False)`
+
+
+PROPORTION OF VOTES AGAINST AMOUNT OF MENTIONS
+
+
+
+
+#this plots the vote share by party
+
+
+
+
+   
+
+
+
+# Count mentions
+
+
+
+   
+    
+
+# Convert to percentages
+
+
+
+
+# Create visualization
+
+
+
+
+
+
+
+
+
+1.Creates a new figure with dimensions 14x7 inches
+
+`plt.figure(figsize=(14, 7))`
+
+2.This creates a bar chart where the x-axis is df_vote['Party'] and the y-axis is df_vote['Percentage'] and then setting specific hex codes for the each party
+
+`bars_vote = plt.bar(df_vote['Party'], df_vote['Percentage'], color=[
+    '#0087DC', '#E4003B', '#FAA61A', '#3F8428','#6D3177','#999999'
+])`
+
+3.Loops through each bar in the chart and gets the height of each bar 
+
+`for bar in bars_vote:
+    height = bar.get_height()`
+
+4.This adds text labels above each bar simular to done previously
+
+` plt.text(bar.get_x() + bar.get_width()/2., height,
+             f'{height:.1f}%',
+             ha='center', va='bottom')`
+
+5.This sets the format of the graph with a title with 20 pixel padding below it, a y-label,sets y-axis limits from 0 to 5%  above the max percentage value ,adds faint horizontal grid lines and adjusts subplot params to prevent overlapping then displays the figure.
+
+`plt.title('UK General Elections Total Vote Share by Party', pad=20)
+plt.ylabel('Percentage of Votes (%)')
+plt.ylim(0, df_vote['Percentage'].max() + 5)
+plt.grid(axis='y', alpha=0.3)
+plt.tight_layout()
+plt.show()`
+
+6.Creates a dictionary to count mentions which defaults to 0 for new keys
+
+`mention_counts = defaultdict(int)`
+
+7.This loops through every headline in the dataframe and creates a set to track party mentions in current headline 
+
+`for headline in df['headline']:
+    found_parties = set()`
+
+8.Checks if any party's regex pattern matches the headline and adds matching parties to the set
+
+` for party, pattern in patterns.items():
+        if pattern.search(headline):
+            found_parties.add(party)`
+
+9.Increments mention count for each mentioned party
+
+`for party in found_parties:
+        mention_counts[party] += 1`
+
+10.This converts the dictionary to a dataframe with party names as index 
+
+`count_df = pd.DataFrame.from_dict(mention_counts, orient='index', columns=['Count'])`
+
+11.This calculates the total mentions across all parties and then adds a percentage column as a proportion of total mentions 
+
+`total_mentions = count_df['Count'].sum()
+count_df['Percentage'] = (count_df['Count'] / total_mentions) * 100`
+
+12.Sorts by percentage in descending order
+
+`count_df = count_df.sort_values('Percentage', ascending=False)`
+
+13.Creates new figure the same size as previous chart 
+
+`plt.figure(figsize=(14, 7))`
+
+14. Defines colour mapping to the same as previous chart
+
+`colors = {
+    'Conservative': '#0087DC',
+    'Labour': '#E4003B',
+    'Liberal Democrat': '#FAA61A',
+    'Scotish National Party': '#3F8428'  
+}`
+
+15.This creates a bar  chart using party names as x-values and percentage values as heights using the colour mapping from the dictionary
+
+`bars_mentions = plt.bar(count_df.index, count_df['Percentage'], 
+                       color=[colors[p] for p in count_df.index])`
+
+16.Adds percentage labels above bars (same format as previous)
+
+`for bar in bars_mentions:
+    height = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width()/2., height,
+             f'{height:.1f}%',
+             ha='center', va='bottom', fontsize=10)`
+
+17.Formats the table setting the title,adding labels, grid,layout then displays the figure
+
+`plt.title('Political Party Mentions in Headlines (% of Total Mentions)', pad=20)
+plt.ylabel('Percentage of Mentions (%)')
+plt.ylim(0, count_df['Percentage'].max() + 5)
+plt.grid(axis='y', alpha=0.2)
+plt.tight_layout()
 plt.show()`
 
