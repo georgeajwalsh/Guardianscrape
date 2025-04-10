@@ -1,5 +1,5 @@
 
-**WEB SCRAPE-OUTPUT 1**
+# Webscrape of Guardian Data [Output 1]
 
 
 1.Imports:requests allows us to make requests to websites,import pandas as pd is useful for working with tables,import random allows us to generate random items,import os is useful for interacting with computer, from datetime import datetime,timedelta gives us access for tools for working with dates and times.
@@ -29,44 +29,79 @@ dates = [(start_date - timedelta(weeks=i)).strftime("%Y-%m-%d") for i in range(N
 else:
     df = pd.DataFrame(columns=["headline", "publication_date", "url"])`
 
-5.Fetch articles for each week:first for week_date in dates is a forloop iterating through each date, params sets up the API paramaters for the given date such that it i for the given date showing headlines and picks up to 10 articles per day. Response then requests the guardian API for our given parameters if response.status_code then checks if the request went through with 200 meaning 'OK' if this condition is met this will convert the respone into readable data grabbing the relevant data. the following if function if articles checks if we got any articles for that given date if so it keeps going such that selected_article will pick a random article. aricle_data creates a small dictionary with the atricle title, publication date and URL where it can be read. df= saves our new article to the existing table df and then df.to_csv saves the whole updated file back to CSV file.. The rest of the code is used to adress issues with colection such that the first print gives us a little sucessa message to see that something was saved for that date with the follwoing print in the else command telling us if nothing came up for given day and the following else will tell us it failed to fetch with the status code so I can see what went wrong. FIaly wants the loop is complete I print a data collection complete message.
+5.Begins a loop that iterates through each date in the dates list
 
-`for week_date in dates:
-    params = {
+``for week_date in dates:`
+
+6.Creates a dictionary for the API request containing the authentication key, a from-date to to-date both set to the same value given looking at specific day, then requests headline field in response and limits to 10 articles per day
+
+` params = {
         "api-key": API_KEY,
         "from-date": week_date,
         "to-date": week_date,
         "show-fields": "headline",
-        "page-size": 10,  # Get up to 10 articles from the date
-    }
+        "page-size": 10,  
+    }`
 
-    response = requests.get(BASE_URL, params=params)
+7.Makes a GET request to the API using the base URL and passes the parameters dictionary storing response in response variable 
 
-    if response.status_code == 200:
-        data = response.json()
-        articles = data["response"]["results"]
-        
-        if articles:
-            selected_article = random.choice(articles)  # Pick one randomly
-            article_data = {
+`response = requests.get(BASE_URL, params=params)`
+
+8.Checks if the request was succesful
+
+`if response.status_code == 200:`
+
+9.Converts the succesful response to JSON format and stores parsed data in data variable
+
+`data = response.json()`
+
+10.Extracts the list of articles from the nested JSON strucutre and accesses 'response' dictionary, then accesses 'results' list within it then stores in articles variable
+
+`articles = data["response"]["results"]`
+
+11.Checks if any articles were found for this date
+
+`if articles:`
+
+12.Randomly selects one article from the available articles
+
+`selected_article = random.choice(articles)`
+
+13.Creates a dictionary with the headline,publication date and URL
+
+`article_data = {
                 "headline": selected_article["webTitle"],
                 "publication_date": selected_article["webPublicationDate"],
                 "url": selected_article["webUrl"],
-            }
+            }`
 
-            # Append new data and save
-            df = pd.concat([df, pd.DataFrame([article_data])], ignore_index=True)
-            df.to_csv(FILE_NAME, index=False)
+14.Concatenates the new article data to existing dataframe df using ignore_index to maintain clear index
 
-            print(f"Saved article from {week_date}: {article_data['headline']}")
-        else:
-            print(f"No articles found for {week_date}.")
-    else:
-        print(f"Failed to fetch data for {week_date}: {response.status_code}")
+`df = pd.concat([df, pd.DataFrame([article_data])], ignore_index=True)`
 
-print(" Data collection complete!")`
+15.Saves the updates dataframe to CSV file using index=False to prevent saving row numbers
 
-**IMPORT GDP-OUTPUT 2**
+`df.to_csv(FILE_NAME, index=False)`
+
+16.This prints a success message showinf the data processed and the headline that was saved
+
+`print(f"Saved article from {week_date}: {article_data['headline']}")`
+
+17.Handles the case where no articles were found for the date
+
+`else:
+     print(f"No articles found for {week_date}.")`
+
+18.Handles the case where API request failed showing the date that failed and the HTTP error code
+
+`else:
+     print(f"Failed to fetch data for {week_date}: {response.status_code}")`
+
+19.Final message indicates all dates have been processed
+
+`print(" Data collection complete!")`
+
+# Import of GDP data [OUTPUT 2]
 
 
 1.This calls the GDP.csv by locating it within my file directory skipping 4 rows as these are empty saving to df_gdp.
@@ -90,7 +125,7 @@ df_gdp_cleaned[gdp_columns] = df_gdp_cleaned[gdp_columns].apply(pd.to_numeric, e
 
 `df_gdp_cleaned.head()`
 
-**VISUALISATION COUNTRY MENTIONS AGAINST TOTAL GDP**
+# Visualisation country mentions against total GDP [OUTPUT 3]
 
 
 1.Imports given we have already imported the majority of packages only need need import lowess this function is used for statsmodels in our case its for a smoothes line of best fit.
@@ -195,7 +230,7 @@ plt.grid(axis='y', alpha=0.3)`
 plt.tight_layout()
 plt.show()`
 
-**WAR DDF IMPORT- OUTPUT 3**
+# War datafarme import [OUTPUT 3]
 
 
 1.Utalises the pandas function read the csv into the df_war dataframe skipping the first 4 rows off the file 
@@ -218,7 +253,7 @@ plt.show()`
 
 `df_war_cleaned.head()`
 
-**COMPARISON OF TOTAL DEATHS AND WAR MENTIONS **
+# Visualisation of total deaths by war against total war mentions[OUPUT 4]
 
 
 1. This first defines our countries of interest
@@ -338,7 +373,7 @@ ax2.grid(axis='y', linestyle=':', alpha=0.5)`
 `plt.tight_layout()
 plt.show()`
 
-**PARTY DATA**
+# Political party data import [OUTPUT 5]
 
 
 1.This reads the excel file indicating the headers are in row 9
@@ -379,40 +414,7 @@ plt.show()`
 `df_vote = df_vote.sort_values('Percentage', ascending=False)`
 
 
-PROPORTION OF VOTES AGAINST AMOUNT OF MENTIONS
-
-
-
-
-#this plots the vote share by party
-
-
-
-
-   
-
-
-
-# Count mentions
-
-
-
-   
-    
-
-# Convert to percentages
-
-
-
-
-# Create visualization
-
-
-
-
-
-
-
+# Visualisation of party votes against party mentions [OUTPUT 6]
 
 
 1.Creates a new figure with dimensions 14x7 inches
