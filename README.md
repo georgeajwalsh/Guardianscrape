@@ -10,96 +10,112 @@ import random
 import os
 from datetime import datetime, timedelta`
 
-2.Setup: API_KEY is the personal key that gives us access to the guardians content API, BASE_URL is the web adress we will be pulling data from, FILE_NAME is where we will be saving the data we collect and NUM_WEEKS specifies how many weeks of data we will look at. 
+2.Setup: API_KEY is the personal key that gives us access to the guardians content API, BASE_URL is the web adress we will be pulling data from and FILE_NAME is where we will be saving the data we collect
 
 `API_KEY = "998344a2-04a1-4410-9d53-1490cfa2e9d2"
 BASE_URL = "https://content.guardianapis.com/search"
-FILE_NAME = "guardian_articles.csv"
-NUM_WEEKS = 580`
+FILE_NAME = "guardian_articles.csv"`
 
-3.Date generation: the start_date finds todays date, dates creates a list of dates one per week working backwards from todays dates fomatting as "2023-06-30".
+3. Setup: Defining the date range and number of articles to fetch
 
-`start_date = datetime.today()
-dates = [(start_date - timedelta(weeks=i)).strftime("%Y-%m-%d") for i in range(NUM_WEEKS)]`
+`start_year = 2014
+end_year = datetime.today().year
+total_years = end_year - start_year + 1
+total_weeks_to_scrape = 554  # total number of weeks/articles desired
+weeks_per_year = total_weeks_to_scrape // total_years`
 
-4.Check for previous data/create dataframe: os.path.exists check if the FILE_NAME previouslyb specified already exists on our computer if not it creates an empty dataframe with the relevant columns.
+4. Function: First define the function to generate a list of evenly spaced dates, set the start and end of year, calculate number of days in that year, determine the spacing between each article date and then generate a list of dates spaced by step days then format such that (YYYY-MM-DD)
+
+`def get_evenly_spaced_dates_for_year(year, weeks):
+    start = datetime(year, 1, 1)
+    end = datetime(year, 12, 31)
+    days_between = (end - start).days
+    step = days_between // weeks
+    return [(start + timedelta(days=i * step)).strftime("%Y-%m-%d") for i in range(weeks)]`
+
+5. Generate an empty list to store all generated dated and then loop through each year, generating the weekly dates and add to all_dates
+
+`all_dates = []
+for year in range(start_year, end_year + 1):
+    all_dates.extend(get_evenly_spaced_dates_for_year(year, weeks_per_year))`
+
+6.Shuffle the dates so the API requests are not in chronolological order to help address rate limits and bias
+
+`random.shuffle(all_dates)`
+
+6. This will load the existing file if it exists otherwise it will start with a new dataframe with the defined columns
 
 `if os.path.exists(FILE_NAME):
     df = pd.read_csv(FILE_NAME)
 else:
     df = pd.DataFrame(columns=["headline", "publication_date", "url"])`
 
-5.Begins a loop that iterates through each date in the dates list
+7. Loops through each date
 
-``for week_date in dates:`
+`for week_date in all_dates:`
 
-6.Creates a dictionary for the API request containing the authentication key, a from-date to to-date both set to the same value given looking at specific day, then requests headline field in response and limits to 10 articles per day
+8. Set up the parameters for the API request
 
-` params = {
+`    params = {
         "api-key": API_KEY,
         "from-date": week_date,
         "to-date": week_date,
         "show-fields": "headline",
-        "page-size": 10,  
+        "page-size": 10,
     }`
 
-7.Makes a GET request to the API using the base URL and passes the parameters dictionary storing response in response variable 
+9. Send a GET request to the API using above parameters
 
-`response = requests.get(BASE_URL, params=params)`
+` response = requests.get(BASE_URL, params=params)`
 
-8.Checks if the request was succesful
+10. Check if request was succesful
 
-`if response.status_code == 200:`
+`  if response.status_code == 200:`
 
-9.Converts the succesful response to JSON format and stores parsed data in data variable
+11. Parse the JSON response and extract the list of articles
 
-`data = response.json()`
+`data = response.json()
+        articles = data["response"]["results"]`
+12. If artcles are returned, pick one at random
 
-10.Extracts the list of articles from the nested JSON strucutre and accesses 'response' dictionary, then accesses 'results' list within it then stores in articles variable
+`if articles:
+            selected_article = random.choice(articles)`
 
-`articles = data["response"]["results"]`
 
-11.Checks if any articles were found for this date
+13.Extracts rge desired fields and stores them in a dictionary
 
-`if articles:`
-
-12.Randomly selects one article from the available articles
-
-`selected_article = random.choice(articles)`
-
-13.Creates a dictionary with the headline,publication date and URL
-
-`article_data = {
+`        article_data = {
                 "headline": selected_article["webTitle"],
                 "publication_date": selected_article["webPublicationDate"],
                 "url": selected_article["webUrl"],
             }`
 
-14.Concatenates the new article data to existing dataframe df using ignore_index to maintain clear index
+14. Append the new article as a row in the DataFrame
 
 `df = pd.concat([df, pd.DataFrame([article_data])], ignore_index=True)`
 
-15.Saves the updates dataframe to CSV file using index=False to prevent saving row numbers
+15. Save the updated DataFrame to the CSV file
 
 `df.to_csv(FILE_NAME, index=False)`
 
-16.This prints a success message showinf the data processed and the headline that was saved
+16.Prints a confirmaton that article was saved
 
 `print(f"Saved article from {week_date}: {article_data['headline']}")`
 
-17.Handles the case where no articles were found for the date
+17. If no article was found for that date, print a message
 
 `else:
-     print(f"No articles found for {week_date}.")`
+            print(f"No articles found for {week_date}.")`
 
-18.Handles the case where API request failed showing the date that failed and the HTTP error code
+18.If the request failed (non-200 status), print an error message
 
-`else:
-     print(f"Failed to fetch data for {week_date}: {response.status_code}")`
+` else:
+        print(f"Failed to fetch data for {week_date}: {response.status_code}")`
 
-19.Final message indicates all dates have been processed
+19.Once all dates are processed, prints a completion message
 
-`print(" Data collection complete!")`
+`print("Data collection complete!")`
+
 
 # Import of GDP data [OUTPUT 2]
 
