@@ -116,8 +116,152 @@ else:
 
 `print("Data collection complete!")`
 
+# Data Distribution
 
-# Import of GDP data [OUTPUT 2]
+1.Import pandas for data manipulation, matplotlib.pyploy for plotting, seaborn for statistical plots and numpy for numerical operations
+
+`import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np`
+
+2.Converts the 'publication_date' column to correct datatime format
+
+`df['publication_date'] = pd.to_datetime(df['publication_date'])`
+
+3.Extracts the year and month from the datetime
+
+`df['year'] = df['publication_date'].dt.year
+df['month'] = df['publication_date'].dt.month_name()`
+
+4. Counts how many entries there are per year, then sorts years in order and then prepares labels for plotting
+
+`year_counts = df['year'].value_counts().sort_index()
+year_index = year_counts.index.astype(str)
+year_values = year_counts.values
+`
+
+5.Groups data by year and month, counting entries per groip to the then convert to a DataFrame with a count column
+
+`monthly_distribution = df.groupby(['year', 'month']).size().reset_index(name='count')`
+
+6. Ensures months appear in calender order
+
+monthly_distribution = df.groupby(['year', 'month']).size().reset_index(name='count')
+
+
+
+7. Ensure consistent month order
+
+`month_order = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+]
+monthly_distribution['month'] = pd.Categorical(monthly_distribution['month'], categories=month_order, ordered=True)`
+
+8. Creates a figure with two side-by-side plots
+
+`fig, axes = plt.subplots(1, 2, figsize=(18, 7))`
+
+9. Chooses a colour palette with enough colours for each year
+
+`colors = sns.color_palette("tab10", len(year_counts))`
+
+10.Draws a bar chart on the left subplot fir each year 
+
+`bars = axes[0].bar(
+    year_index,
+    year_values,
+    color=colors,
+    edgecolor='white',
+    width=0.6,
+    label='Entries'
+)`
+
+11. Adds a red smoothed trend line
+
+`sns.lineplot(
+    x=year_index,
+    y=year_values,
+    color='red',
+    linewidth=1,
+    label='Trend',
+    ax=axes[0]
+)`
+
+12. Annotates the bar chart with value labels above each bar
+
+`for bar in bars:
+    height = bar.get_height()
+    axes[0].text(
+        bar.get_x() + bar.get_width() / 2,
+        height + 1,
+        f'{height}',
+        ha='center',
+        va='bottom',
+        fontsize=10
+    )`
+
+13. Adds labels,title, gridlines and removes top spines for cleaner look
+
+`axes[0].set_title("Entries Per Year with Trend Line", fontsize=16, weight='bold', pad=15)
+axes[0].set_xlabel("Years", fontsize=12)
+axes[0].set_ylabel("Number of Entries", fontsize=12)
+axes[0].tick_params(axis='x', rotation=0, labelsize=10)
+axes[0].tick_params(axis='y', labelsize=10)
+axes[0].grid(axis='y', linestyle='--', alpha=0.4)
+sns.despine(top=True, right=True, ax=axes[0])`
+
+
+14. Creates a boxplot on the right subplot showing how entry counts vary by month
+
+`sns.boxplot(
+    data=monthly_distribution,
+    x='month',
+    y='count',
+    palette='pastel',
+    linewidth=1.2,
+    fliersize=3,
+    ax=axes[1]
+)`
+
+15.For each month gets entry counts, computes quatiles,median and whisker and then annotates the plot with these statistics
+
+`for i, month in enumerate(month_order):
+    month_data = monthly_distribution[monthly_distribution['month'] == month]['count'].dropna()
+    if len(month_data) == 0:
+        continue
+
+    q1 = np.percentile(month_data, 25)
+    q3 = np.percentile(month_data, 75)
+    median = np.median(month_data)
+    whisker_low = month_data[month_data >= q1 - 1.5 * (q3 - q1)].min()
+    whisker_high = month_data[month_data <= q3 + 1.5 * (q3 - q1)].max()
+       axes[1].text(i, median + 2, f'Median: {int(median)}', ha='center', va='center', fontsize=7, color='black', weight='bold')
+    axes[1].text(i, q1, f'Q1: {int(q1)}', ha='center', va='top', fontsize=8, color='darkblue')
+    axes[1].text(i, q3, f'Q3: {int(q3)}', ha='center', va='bottom', fontsize=8, color='darkgreen')
+    axes[1].text(i, whisker_low, f'Min: {int(whisker_low)}', ha='center', va='top', fontsize=8, color='gray')
+    axes[1].text(i, whisker_high, f'Max: {int(whisker_high)}', ha='center', va='bottom', fontsize=8, color='gray')`
+
+16. Styles the box plot simularly adding title, axis labels and grid
+
+`axes[1].set_title("Box Plot of Monthly Entry Counts Across Years", fontsize=16, weight='bold', pad=20)
+axes[1].set_xlabel("Month", fontsize=12)
+axes[1].set_ylabel("Number of Entries per Year", fontsize=12)
+axes[1].tick_params(axis='x', rotation=45, labelsize=10)
+axes[1].tick_params(axis='y', labelsize=10)
+axes[1].grid(axis='y', linestyle='--', alpha=0.4)
+sns.despine(top=True, right=True, ax=axes[1])`
+
+17. Finally, adjust layout to prevent overlapping and display the complete figure
+
+`plt.tight_layout()
+plt.show()`
+
+
+
+
+# Import of GDP data [OUTPUT 3]
 
 
 1.This calls the GDP.csv by locating it within my file directory skipping 4 rows as these are empty saving to df_gdp.
