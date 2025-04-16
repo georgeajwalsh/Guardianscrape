@@ -365,7 +365,7 @@ plt.plot(target_countries, mentions_smoothed[:, 1], color='red', lw=2, label='Tr
 
 11.This is general formatting such that it adds a title, rotates our x-ticks, adds grid lines abd a legend. 
 
-`plt.title('Country Mentions in Headlines (Top 12 Economies)')
+`plt.title('Country Mentions in Headlines (Top 12 Economies) (2014-2023)')
 plt.ylabel('Number of Mentions')
 plt.xticks(rotation=45, ha='right')
 plt.grid(axis='y', alpha=0.3)
@@ -380,7 +380,7 @@ sns.barplot(x='Country Name', y='Total GDP', data=df_filtered, palette='viridis'
 
 `plt.xlabel('Country')
 plt.ylabel('Total GDP in Trillions(in USD)')
-plt.title('Total GDP of Top 12 Economies')
+plt.title('Total GDP of Top 12 Economies (2013-2023)')
 plt.xticks(rotation=45, ha='right')
 plt.grid(axis='y', alpha=0.3)`
 
@@ -390,7 +390,7 @@ plt.grid(axis='y', alpha=0.3)`
 plt.tight_layout()
 plt.show()`
 
-# War datafarme import [OUTPUT 3]
+# War datafarme import [OUTPUT 4]
 
 
 1.Utalises the pandas function read the csv into the df_war dataframe skipping the first 4 rows off the file 
@@ -516,7 +516,7 @@ y_vals = mentions_df['Mentions'].values`
 
 17.This formats our graph adding titles, grid lines on y axis and rotating labels for readability 
 
-`ax2.set_title('Mentions of "War" or "Conflict" in Headlines', fontsize=14)
+`ax2.set_title('Mentions of "War" or "Conflict" in Headlines (2013-2021)', fontsize=14)
 ax2.set_ylabel('Number of Mentions')
 ax2.set_xticklabels(mentions_df['Country'], rotation=30)
 ax2.grid(axis='y', linestyle=':', alpha=0.5)`
@@ -533,7 +533,7 @@ ax2.grid(axis='y', linestyle=':', alpha=0.5)`
 `plt.tight_layout()
 plt.show()`
 
-# Political party data import [OUTPUT 5]
+# Political party data import [OUTPUT 6]
 
 
 1.This reads the excel file indicating the headers are in row 9
@@ -573,92 +573,95 @@ plt.show()`
 
 `df_vote = df_vote.sort_values('Percentage', ascending=False)`
 
+9.Matches the years of this data with our Guardian dataset
+
+`df_2021= df[df['year'] <= 2021]`
+
 
 # Visualisation of party votes against party mentions [OUTPUT 6]
 
+1. Imports defaultdict which behavws like a normal dictionary but gives a default value(in this case, int, which is 0
 
-1.Creates a new figure with dimensions 14x7 inches
+`from collections import defaultdict`
+
+2. Creates a dictionary called patters where keys are party names, values are compiled regular expressions, our strings aren't case sensitive and we don't match parts of words
+
+`patterns = {
+    'Conservative': re.compile(r'\bConservative(s)?\b|\bTory\b|\bTories\b', re.IGNORECASE),
+    'Labour': re.compile(r'\bLabour\b', re.IGNORECASE),
+    'Liberal Democrat': re.compile(r'\bLiberal Democrat(s)?\b|\bLib Dem(s)?\b', re.IGNORECASE),
+    'Scottish National Party': re.compile(r'\bScottish National Party\b|\bSNP\b', re.IGNORECASE)
+}`
+
+3. Starts a new pl;ot with a specified size (14x7)
 
 `plt.figure(figsize=(14, 7))`
 
-2.This creates a bar chart where the x-axis is df_vote['Party'] and the y-axis is df_vote['Percentage'] and then setting specific hex codes for the each party
+4. Plots a bar chart using party names and their vote percentages from our dataframe and assigning custom colours for each bar
 
 `bars_vote = plt.bar(df_vote['Party'], df_vote['Percentage'], color=[
-    '#0087DC', '#E4003B', '#FAA61A', '#3F8428','#6D3177','#999999'
+    '#0087DC', '#E4003B', '#FAA61A', '#3F8428', '#6D3177', '#999999'
 ])`
 
-3.Loops through each bar in the chart and gets the height of each bar 
+5. Adds the percentage value as a label above each bar
 
 `for bar in bars_vote:
-    height = bar.get_height()`
-
-4.This adds text labels above each bar simular to done previously
-
-` plt.text(bar.get_x() + bar.get_width()/2., height,
+    height = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width()/2., height,
              f'{height:.1f}%',
              ha='center', va='bottom')`
 
-5.This sets the format of the graph with a title with 20 pixel padding below it, a y-label,sets y-axis limits from 0 to 5%  above the max percentage value ,adds faint horizontal grid lines and adjusts subplot params to prevent overlapping then displays the figure.
+6.Sets chart title, y-axis label, y-axis limit, adds grid, uses tight_layout() to adjust spacing then show() to display the chart
 
-`plt.title('UK General Elections Total Vote Share by Party', pad=20)
+`plt.title('UK General Elections Total Vote Share by Party (2015, 2017 & 2019)', pad=20)
 plt.ylabel('Percentage of Votes (%)')
 plt.ylim(0, df_vote['Percentage'].max() + 5)
 plt.grid(axis='y', alpha=0.3)
 plt.tight_layout()
 plt.show()`
 
-6.Creates a dictionary to count mentions which defaults to 0 for new keys
+7. Initialises a dictionary to count mentions, with default value of 0
 
 `mention_counts = defaultdict(int)`
 
-7.This loops through every headline in the dataframe and creates a set to track party mentions in current headline 
+8. Loops through each headline in our dataframe, using the regex patters to search for mentions, then adding to found_parties if match found and then after checking increments the count for each one found in the current headline to prevent double counting.
 
-`for headline in df['headline']:
-    found_parties = set()`
-
-8.Checks if any party's regex pattern matches the headline and adds matching parties to the set
-
-` for party, pattern in patterns.items():
+`for headline in df_2021['headline']:
+    found_parties = set()
+    for party, pattern in patterns.items():
         if pattern.search(headline):
-            found_parties.add(party)`
-
-9.Increments mention count for each mentioned party
-
-`for party in found_parties:
+            found_parties.add(party)
+    for party in found_parties:
         mention_counts[party] += 1`
 
-10.This converts the dictionary to a dataframe with party names as index 
+9. Then converts mention_counts into a DataFrame
 
 `count_df = pd.DataFrame.from_dict(mention_counts, orient='index', columns=['Count'])`
 
-11.This calculates the total mentions across all parties and then adds a percentage column as a proportion of total mentions 
+10. Calculates the total mentions, adds a new column for percentage share of mentions and then sorts in descending order
 
 `total_mentions = count_df['Count'].sum()
-count_df['Percentage'] = (count_df['Count'] / total_mentions) * 100`
+count_df['Percentage'] = (count_df['Count'] / total_mentions) * 100
+count_df = count_df.sort_values('Percentage', ascending=False)`
 
-12.Sorts by percentage in descending order
-
-`count_df = count_df.sort_values('Percentage', ascending=False)`
-
-13.Creates new figure the same size as previous chart 
-
-`plt.figure(figsize=(14, 7))`
-
-14. Defines colour mapping to the same as previous chart
+11. Sets up a colour dictionary to consistently colour code parties in plots
 
 `colors = {
     'Conservative': '#0087DC',
     'Labour': '#E4003B',
     'Liberal Democrat': '#FAA61A',
-    'Scotish National Party': '#3F8428'  
+    'Scottish National Party': '#3F8428',
+    'Green': '#6D3177',
+    'Reform UK': '#999999'
 }`
 
-15.This creates a bar  chart using party names as x-values and percentage values as heights using the colour mapping from the dictionary
+12. Plots a bar chart and uses our colors dictionary for bar colours
 
-`bars_mentions = plt.bar(count_df.index, count_df['Percentage'], 
-                       color=[colors[p] for p in count_df.index])`
+`plt.figure(figsize=(14, 7))
+bars_mentions = plt.bar(count_df.index, count_df['Percentage'], 
+                        color=[colors.get(party, '#CCCCCC') for party in count_df.index])`
 
-16.Adds percentage labels above bars (same format as previous)
+13. Adds percentage labels above each bar
 
 `for bar in bars_mentions:
     height = bar.get_height()
@@ -666,12 +669,218 @@ count_df['Percentage'] = (count_df['Count'] / total_mentions) * 100`
              f'{height:.1f}%',
              ha='center', va='bottom', fontsize=10)`
 
-17.Formats the table setting the title,adding labels, grid,layout then displays the figure
 
-`plt.title('Political Party Mentions in Headlines (% of Total Mentions)', pad=20)
+14. Adds chart title, y-axis label, set y-limit slightly above max value, shows grid and plot
+
+`plt.title('Political Party Mentions in Headlines (% of Total Mentions) (2013 and 2021)', pad=20)
 plt.ylabel('Percentage of Mentions (%)')
 plt.ylim(0, count_df['Percentage'].max() + 5)
 plt.grid(axis='y', alpha=0.2)
 plt.tight_layout()
 plt.show()`
+
+
+# WordCloud
+
+1. Imports the WordClass and the built in list of STOPWORDS from the wordcloud library
+
+`from wordcloud import WordCloud, STOPWORDS`
+
+2. Merges all non empty headlines into a single string with each headline being separated by a space
+
+`text = " ".join(headline for headline in df['headline'].dropna())`
+
+3. Converts the default set of stopwords into a Python set and then adds additional specific common words that are nmot useful to our analysis
+
+`stopwords = set(STOPWORDS)
+stopwords.update(["s", "said", "mr", "mrs",
+                  "says","will","happened","review",
+                  "quick","U","new","crossword", "Cryptic",""
+                  "day","call","year"])`
+
+4. Creates a WordCloud object with specified width, height, white backround, the cleaned list of stopwords, and a color map (viridis)
+
+`wordcloud = WordCloud(width=800, height=400,
+                      background_color='white',
+                      stopwords=stopwords,
+                      colormap='viridis').generate(text)`
+
+5. Sets up a plot with size 10x5, displays the word cloud using bilinear interpolation, removed axis for cleaner look, adds a title and then renders the final word cloud using plt.show()
+
+`plt.figure(figsize=(10, 5))
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis('off')
+plt.title('Most Frequent Words in Headlines (2013-2023)')
+plt.show()`
+
+# Premier League data import
+
+1. Loads the Premier League match data from csv into our dataframe
+
+`df_footy=pd.read_csv("/Users/georgewalsh/Documents/premier-league-matches.csv")`
+
+2, Filter our dataset to only include matches from 2015-2016 season onwards
+
+`df_footy_filtered = df_footy[df_footy['Season_End_Year'] >= 2016]`
+
+3. Identifies matches where the home team scored more then away teams and counts how many timeas each home team won at home
+
+`home_wins = df_footy_filtered[df_footy_filtered['HomeGoals'] > df_footy_filtered['AwayGoals']]
+home_win_counts = home_wins['Home'].value_counts()`
+
+4. Identifies matcges where away team scored more goals then home and then counts how many times each away team won away from home
+
+`away_wins = df_footy_filtered[df_footy_filtered['AwayGoals'] > df_footy_filtered['HomeGoals']]
+away_win_counts = away_wins['Away'].value_counts()`
+
+5. Adds the home and away win for each teams, uses fill_value to ensure any teams that only appear in one are still counted and then converts the combined totals into integers
+
+`total_wins = home_win_counts.add(away_win_counts, fill_value=0).astype(int)`
+
+6. Converts the total_wins into a new dataframe renaming the columns to 'team' and 'wins'
+
+`df_team_wins = total_wins.reset_index()
+df_team_wins.columns = ['team', 'wins']`
+
+7. Sorts the teams in descending order based on number of wins and then restes the index to give clean, consecutive numbering
+
+`df_team_wins = df_team_wins.sort_values(by='wins', ascending=False).reset_index(drop=True)`
+
+8. Filters the Guardian dataframe to ensure consistency of timelines
+
+`df_2023 = df[(df['year'] >= 2015) & (df['year'] <= 2023)]`
+
+9. Displays the top 5 teams with the most wins from the filtered football dataset
+
+`df_team_wins.head()`
+
+
+# Premier League visualisation
+
+1. Creates a dictionary called patters where each key is a football team and the value is a regex pattern that matches common variations and also not case sensitive as a result of re.IGNORECASE
+
+`patterns = {
+    'Arsenal': re.compile(r'\bArsenal\b|\bGunners\b', re.IGNORECASE),
+    'Aston Villa': re.compile(r'\bAston Villa\b|\bVilla\b', re.IGNORECASE),
+    'Bournemouth': re.compile(r'\bBournemouth\b|\bCherries\b', re.IGNORECASE),
+    'Brentford': re.compile(r'\bBrentford\b|\bBees\b', re.IGNORECASE),
+    'Brighton': re.compile(r'\bBrighton\b|\bSeagulls\b', re.IGNORECASE),
+    'Burnley': re.compile(r'\bBurnley\b|\bClarets\b', re.IGNORECASE),
+    'Cardiif City': re.compile(r'\bCardiff\b|\bBluebirds\b', re.IGNORECASE),
+    'Chelsea': re.compile(r'\bChelsea\b|\bBlues\b', re.IGNORECASE),
+    'Crystal Palace': re.compile(r'\bCrystal Palace\b|\bEagles\b', re.IGNORECASE),
+    'Everton': re.compile(r'\bEverton\b|\bToffees\b', re.IGNORECASE),
+    'Fulham': re.compile(r'\bFulham\b|\bCottagers\b', re.IGNORECASE),
+    'Hull City': re.compile(r'\bHull\b|\bTigers\b', re.IGNORECASE),
+    'Huddersfield Town': re.compile(r'\bHuddersfield\b|\bTerriers\b', re.IGNORECASE),
+    'Leeds United': re.compile(r'\bLeeds\b|\bLeeds United\b', re.IGNORECASE),
+    'Leicester City': re.compile(r'\bLeicester\b|\bFoxes\b', re.IGNORECASE),
+    'Liverpool': re.compile(r'\bLiverpool\b|\bReds\b', re.IGNORECASE),
+    'Manchester City': re.compile(r'\bManchester City\b|\bCity\b', re.IGNORECASE),
+    'Manchester United': re.compile(r'\bManchester United\b|\bUnited\b|\bRed Devils\b', re.IGNORECASE),
+    'Middlesbrough': re.compile(r'\bMiddlesbrough\b|\bBoro\b', re.IGNORECASE),
+    'Newcastle United': re.compile(r'\bNewcastle\b|\bMagpies\b', re.IGNORECASE),
+    'Norwich City': re.compile(r'\bNorwich\b|\bCanaries\b', re.IGNORECASE),
+    'Nottingham Forest': re.compile(r'\bNottingham Forest\b|\bForest\b', re.IGNORECASE),
+    'Sheffield United': re.compile(r'\bSheffield United\b|\bBlades\b', re.IGNORECASE),
+    'Southampton': re.compile(r'\bSouthampton\b|\bSaints\b', re.IGNORECASE),
+    'Stoke City': re.compile(r'\bStoke\b|\bPotters\b', re.IGNORECASE),
+    'Sunderland': re.compile(r'\bSunderland\b|\bBlack Cats\b', re.IGNORECASE),
+    'Swansea City': re.compile(r'\bSwansea\b|\bSwans\b', re.IGNORECASE),
+    'Tottenham Hotspur': re.compile(r'\bTottenham\b|\bSpurs\b', re.IGNORECASE),
+    'Watford': re.compile(r'\bWatford\b|\bHornets\b', re.IGNORECASE),
+    'West Brom': re.compile(r'\bWest Brom\b|\bBaggies\b', re.IGNORECASE),
+    'West Ham United': re.compile(r'\bWest Ham\b|\bHammers\b', re.IGNORECASE),
+    'Wolves': re.compile(r'\bWolves\b|\bWolverhampton\b', re.IGNORECASE)
+}`
+
+2. Initialise a dictionary that defaults all values to 0 so we can increment mention counts for each term easilt
+
+`mention_counts = defaultdict(int)`
+
+3.Goes through each headline in our DataFrame, checking if each team appears in the headline using regex and if it does adds 1 to that team's mention count.
+
+`for headline in df_2023['headline']:
+    for team, pattern in patterns.items():
+        if pattern.search(headline):
+            mention_counts[team] += 1`
+
+4. Converts the dictionary of mention counts into a new DataFrame with columns 'team' and 'mentions'
+
+`df_mentions = pd.DataFrame(list(mention_counts.items()), columns=['team', 'mentions'])`
+
+5. Sorts the teams from most mentioned to least mentioned
+   
+`df_mentions = df_mentions.sort_values(by='mentions', ascending=False)`
+
+6. Extracts and sorts a list of all unique team names from the wins DataFrame
+
+`all_teams = sorted(df_team_wins['team'].unique())`
+
+7. Generates a unique colour for each team using a Seaborn colour palette and then stores the team color pairs in a dictionary for consistent colour usage across plots
+
+`team_colors = sns.color_palette("hsv", len(all_teams))
+color_dict = {team: color for team, color in zip(all_teams, team_colors)}`
+
+8. Sets a spacing value to slightly offset spacing labels
+
+`offset = 3`
+
+9. Creates a new figure for plotting the total wins, with a custom size
+
+`plt.figure(figsize=(12, 8))`
+
+10. Draws a smoothed black line accross the data points
+
+`sns.lineplot(x=df_team_wins['wins'], y=np.arange(len(df_team_wins)), ci=None, lw=2, color="black", estimator=None)`
+
+11. It draws a horrizontal line from 0 to each teams win count, then adds a circular marker at the end of the line and then annotates the marker with the win count slightly to the right
+
+`for team, wins in zip(df_team_wins['team'], df_team_wins['wins']):
+    plt.hlines(y=team, xmin=0, xmax=wins, color=color_dict[team], linewidth=2)
+    plt.plot(wins, team, "o", color=color_dict[team], markersize=8)
+    plt.text(wins + offset, team, str(wins), va='center', ha='left', fontsize=10, color='black')`
+
+12. Adds x-axis label, plot title, gridlines, x-axis ticks, adjusts layout and finally displays the plot
+     
+`plt.xlabel("Total Wins ")
+plt.title("Total Wins by Team (2015-2023)")
+plt.grid(axis='x', linestyle='--', alpha=0.5)
+plt.xticks(np.arange(0, 230, 10))
+plt.tight_layout()
+plt.show()`
+
+13. Starts a second figure
+
+`plt.figure(figsize=(12, 10))`
+
+14. Draws a smoothed line across mention points
+
+`sns.lineplot(x=df_mentions['mentions'], y=np.arange(len(df_mentions)), lw=2, color="black", estimator=None, errorbar=None)`
+
+15.Makes sure all teams in mentions have a corresponding colour if not grey as a fallback
+
+`for team in df_mentions['team']:
+    if team not in color_dict:
+        color_dict[team] = 'grey'`
+
+16. Simularly to our other plot, draws a horizontal line for each team and adds a marker and a label with the mentions count
+
+`for team, mentions in zip(df_mentions['team'], df_mentions['mentions']):
+    plt.hlines(y=team, xmin=0, xmax=mentions, color=color_dict[team], linewidth=2)
+    plt.plot(mentions, team, "o", color=color_dict[team], markersize=8)
+    plt.text(mentions + offset, team, str(mentions), va='center', ha='left', fontsize=10, color='black')`
+
+17. Adds labels, title, grid and x-axis ticks for the mention count. Then does final layout cleaning and displays plot
+
+`plt.xlabel("Number of Mentions in Headlines ")
+plt.title("Premier League Team Mentions in Headlines (2013-2023) ", fontsize=14)
+plt.grid(axis='x', linestyle='--', alpha=0.5)
+plt.xticks(np.arange(0, 190, 10))
+plt.tight_layout()
+plt.show()`
+
+
+
+
 
