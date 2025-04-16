@@ -258,8 +258,205 @@ sns.despine(top=True, right=True, ax=axes[1])`
 `plt.tight_layout()
 plt.show()`
 
+# WordCloud
+
+1. Imports the WordClass and the built in list of STOPWORDS from the wordcloud library
+
+`from wordcloud import WordCloud, STOPWORDS`
+
+2. Merges all non empty headlines into a single string with each headline being separated by a space
+
+`text = " ".join(headline for headline in df['headline'].dropna())`
+
+3. Converts the default set of stopwords into a Python set and then adds additional specific common words that are nmot useful to our analysis
+
+`stopwords = set(STOPWORDS)
+stopwords.update(["s", "said", "mr", "mrs",
+                  "says","will","happened","review",
+                  "quick","U","new","crossword", "Cryptic",""
+                  "day","call","year"])`
+
+4. Creates a WordCloud object with specified width, height, white backround, the cleaned list of stopwords, and a color map (viridis)
+
+`wordcloud = WordCloud(width=800, height=400,
+                      background_color='white',
+                      stopwords=stopwords,
+                      colormap='viridis').generate(text)`
+
+5. Sets up a plot with size 10x5, displays the word cloud using bilinear interpolation, removed axis for cleaner look, adds a title and then renders the final word cloud using plt.show()
+
+`plt.figure(figsize=(10, 5))
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis('off')
+plt.title('Most Frequent Words in Headlines (2013-2023)')
+plt.show()`
+
+# Premier League data import
+
+1. Loads the Premier League match data from csv into our dataframe
+
+`df_footy=pd.read_csv("/Users/georgewalsh/Documents/premier-league-matches.csv")`
+
+2, Filter our dataset to only include matches from 2015-2016 season onwards
+
+`df_footy_filtered = df_footy[df_footy['Season_End_Year'] >= 2016]`
+
+3. Identifies matches where the home team scored more then away teams and counts how many timeas each home team won at home
+
+`home_wins = df_footy_filtered[df_footy_filtered['HomeGoals'] > df_footy_filtered['AwayGoals']]
+home_win_counts = home_wins['Home'].value_counts()`
+
+4. Identifies matcges where away team scored more goals then home and then counts how many times each away team won away from home
+
+`away_wins = df_footy_filtered[df_footy_filtered['AwayGoals'] > df_footy_filtered['HomeGoals']]
+away_win_counts = away_wins['Away'].value_counts()`
+
+5. Adds the home and away win for each teams, uses fill_value to ensure any teams that only appear in one are still counted and then converts the combined totals into integers
+
+`total_wins = home_win_counts.add(away_win_counts, fill_value=0).astype(int)`
+
+6. Converts the total_wins into a new dataframe renaming the columns to 'team' and 'wins'
+
+`df_team_wins = total_wins.reset_index()
+df_team_wins.columns = ['team', 'wins']`
+
+7. Sorts the teams in descending order based on number of wins and then restes the index to give clean, consecutive numbering
+
+`df_team_wins = df_team_wins.sort_values(by='wins', ascending=False).reset_index(drop=True)`
+
+8. Filters the Guardian dataframe to ensure consistency of timelines
+
+`df_2023 = df[(df['year'] >= 2015) & (df['year'] <= 2023)]`
+
+9. Displays the top 5 teams with the most wins from the filtered football dataset
+
+`df_team_wins.head()`
 
 
+# Premier League visualisation
+
+1. Creates a dictionary called patters where each key is a football team and the value is a regex pattern that matches common variations and also not case sensitive as a result of re.IGNORECASE
+
+`patterns = {
+    'Arsenal': re.compile(r'\bArsenal\b|\bGunners\b', re.IGNORECASE),
+    'Aston Villa': re.compile(r'\bAston Villa\b|\bVilla\b', re.IGNORECASE),
+    'Bournemouth': re.compile(r'\bBournemouth\b|\bCherries\b', re.IGNORECASE),
+    'Brentford': re.compile(r'\bBrentford\b|\bBees\b', re.IGNORECASE),
+    'Brighton': re.compile(r'\bBrighton\b|\bSeagulls\b', re.IGNORECASE),
+    'Burnley': re.compile(r'\bBurnley\b|\bClarets\b', re.IGNORECASE),
+    'Cardiif City': re.compile(r'\bCardiff\b|\bBluebirds\b', re.IGNORECASE),
+    'Chelsea': re.compile(r'\bChelsea\b|\bBlues\b', re.IGNORECASE),
+    'Crystal Palace': re.compile(r'\bCrystal Palace\b|\bEagles\b', re.IGNORECASE),
+    'Everton': re.compile(r'\bEverton\b|\bToffees\b', re.IGNORECASE),
+    'Fulham': re.compile(r'\bFulham\b|\bCottagers\b', re.IGNORECASE),
+    'Hull City': re.compile(r'\bHull\b|\bTigers\b', re.IGNORECASE),
+    'Huddersfield Town': re.compile(r'\bHuddersfield\b|\bTerriers\b', re.IGNORECASE),
+    'Leeds United': re.compile(r'\bLeeds\b|\bLeeds United\b', re.IGNORECASE),
+    'Leicester City': re.compile(r'\bLeicester\b|\bFoxes\b', re.IGNORECASE),
+    'Liverpool': re.compile(r'\bLiverpool\b|\bReds\b', re.IGNORECASE),
+    'Manchester City': re.compile(r'\bManchester City\b|\bCity\b', re.IGNORECASE),
+    'Manchester United': re.compile(r'\bManchester United\b|\bUnited\b|\bRed Devils\b', re.IGNORECASE),
+    'Middlesbrough': re.compile(r'\bMiddlesbrough\b|\bBoro\b', re.IGNORECASE),
+    'Newcastle United': re.compile(r'\bNewcastle\b|\bMagpies\b', re.IGNORECASE),
+    'Norwich City': re.compile(r'\bNorwich\b|\bCanaries\b', re.IGNORECASE),
+    'Nottingham Forest': re.compile(r'\bNottingham Forest\b|\bForest\b', re.IGNORECASE),
+    'Sheffield United': re.compile(r'\bSheffield United\b|\bBlades\b', re.IGNORECASE),
+    'Southampton': re.compile(r'\bSouthampton\b|\bSaints\b', re.IGNORECASE),
+    'Stoke City': re.compile(r'\bStoke\b|\bPotters\b', re.IGNORECASE),
+    'Sunderland': re.compile(r'\bSunderland\b|\bBlack Cats\b', re.IGNORECASE),
+    'Swansea City': re.compile(r'\bSwansea\b|\bSwans\b', re.IGNORECASE),
+    'Tottenham Hotspur': re.compile(r'\bTottenham\b|\bSpurs\b', re.IGNORECASE),
+    'Watford': re.compile(r'\bWatford\b|\bHornets\b', re.IGNORECASE),
+    'West Brom': re.compile(r'\bWest Brom\b|\bBaggies\b', re.IGNORECASE),
+    'West Ham United': re.compile(r'\bWest Ham\b|\bHammers\b', re.IGNORECASE),
+    'Wolves': re.compile(r'\bWolves\b|\bWolverhampton\b', re.IGNORECASE)
+}`
+
+2. Initialise a dictionary that defaults all values to 0 so we can increment mention counts for each term easilt
+
+`mention_counts = defaultdict(int)`
+
+3.Goes through each headline in our DataFrame, checking if each team appears in the headline using regex and if it does adds 1 to that team's mention count.
+
+`for headline in df_2023['headline']:
+    for team, pattern in patterns.items():
+        if pattern.search(headline):
+            mention_counts[team] += 1`
+
+4. Converts the dictionary of mention counts into a new DataFrame with columns 'team' and 'mentions'
+
+`df_mentions = pd.DataFrame(list(mention_counts.items()), columns=['team', 'mentions'])`
+
+5. Sorts the teams from most mentioned to least mentioned
+   
+`df_mentions = df_mentions.sort_values(by='mentions', ascending=False)`
+
+6. Extracts and sorts a list of all unique team names from the wins DataFrame
+
+`all_teams = sorted(df_team_wins['team'].unique())`
+
+7. Generates a unique colour for each team using a Seaborn colour palette and then stores the team color pairs in a dictionary for consistent colour usage across plots
+
+`team_colors = sns.color_palette("hsv", len(all_teams))
+color_dict = {team: color for team, color in zip(all_teams, team_colors)}`
+
+8. Sets a spacing value to slightly offset spacing labels
+
+`offset = 3`
+
+9. Creates a new figure for plotting the total wins, with a custom size
+
+`plt.figure(figsize=(12, 8))`
+
+10. Draws a smoothed black line accross the data points
+
+`sns.lineplot(x=df_team_wins['wins'], y=np.arange(len(df_team_wins)), ci=None, lw=2, color="black", estimator=None)`
+
+11. It draws a horrizontal line from 0 to each teams win count, then adds a circular marker at the end of the line and then annotates the marker with the win count slightly to the right
+
+`for team, wins in zip(df_team_wins['team'], df_team_wins['wins']):
+    plt.hlines(y=team, xmin=0, xmax=wins, color=color_dict[team], linewidth=2)
+    plt.plot(wins, team, "o", color=color_dict[team], markersize=8)
+    plt.text(wins + offset, team, str(wins), va='center', ha='left', fontsize=10, color='black')`
+
+12. Adds x-axis label, plot title, gridlines, x-axis ticks, adjusts layout and finally displays the plot
+     
+`plt.xlabel("Total Wins ")
+plt.title("Total Wins by Team (2015-2023)")
+plt.grid(axis='x', linestyle='--', alpha=0.5)
+plt.xticks(np.arange(0, 230, 10))
+plt.tight_layout()
+plt.show()`
+
+13. Starts a second figure
+
+`plt.figure(figsize=(12, 10))`
+
+14. Draws a smoothed line across mention points
+
+`sns.lineplot(x=df_mentions['mentions'], y=np.arange(len(df_mentions)), lw=2, color="black", estimator=None, errorbar=None)`
+
+15.Makes sure all teams in mentions have a corresponding colour if not grey as a fallback
+
+`for team in df_mentions['team']:
+    if team not in color_dict:
+        color_dict[team] = 'grey'`
+
+16. Simularly to our other plot, draws a horizontal line for each team and adds a marker and a label with the mentions count
+
+`for team, mentions in zip(df_mentions['team'], df_mentions['mentions']):
+    plt.hlines(y=team, xmin=0, xmax=mentions, color=color_dict[team], linewidth=2)
+    plt.plot(mentions, team, "o", color=color_dict[team], markersize=8)
+    plt.text(mentions + offset, team, str(mentions), va='center', ha='left', fontsize=10, color='black')`
+
+17. Adds labels, title, grid and x-axis ticks for the mention count. Then does final layout cleaning and displays plot
+
+`plt.xlabel("Number of Mentions in Headlines ")
+plt.title("Premier League Team Mentions in Headlines (2013-2023) ", fontsize=14)
+plt.grid(axis='x', linestyle='--', alpha=0.5)
+plt.xticks(np.arange(0, 190, 10))
+plt.tight_layout()
+plt.show()`
 
 # Import of GDP data [OUTPUT 3]
 
@@ -680,205 +877,8 @@ plt.tight_layout()
 plt.show()`
 
 
-# WordCloud
-
-1. Imports the WordClass and the built in list of STOPWORDS from the wordcloud library
-
-`from wordcloud import WordCloud, STOPWORDS`
-
-2. Merges all non empty headlines into a single string with each headline being separated by a space
-
-`text = " ".join(headline for headline in df['headline'].dropna())`
-
-3. Converts the default set of stopwords into a Python set and then adds additional specific common words that are nmot useful to our analysis
-
-`stopwords = set(STOPWORDS)
-stopwords.update(["s", "said", "mr", "mrs",
-                  "says","will","happened","review",
-                  "quick","U","new","crossword", "Cryptic",""
-                  "day","call","year"])`
-
-4. Creates a WordCloud object with specified width, height, white backround, the cleaned list of stopwords, and a color map (viridis)
-
-`wordcloud = WordCloud(width=800, height=400,
-                      background_color='white',
-                      stopwords=stopwords,
-                      colormap='viridis').generate(text)`
-
-5. Sets up a plot with size 10x5, displays the word cloud using bilinear interpolation, removed axis for cleaner look, adds a title and then renders the final word cloud using plt.show()
-
-`plt.figure(figsize=(10, 5))
-plt.imshow(wordcloud, interpolation='bilinear')
-plt.axis('off')
-plt.title('Most Frequent Words in Headlines (2013-2023)')
-plt.show()`
-
-# Premier League data import
-
-1. Loads the Premier League match data from csv into our dataframe
-
-`df_footy=pd.read_csv("/Users/georgewalsh/Documents/premier-league-matches.csv")`
-
-2, Filter our dataset to only include matches from 2015-2016 season onwards
-
-`df_footy_filtered = df_footy[df_footy['Season_End_Year'] >= 2016]`
-
-3. Identifies matches where the home team scored more then away teams and counts how many timeas each home team won at home
-
-`home_wins = df_footy_filtered[df_footy_filtered['HomeGoals'] > df_footy_filtered['AwayGoals']]
-home_win_counts = home_wins['Home'].value_counts()`
-
-4. Identifies matcges where away team scored more goals then home and then counts how many times each away team won away from home
-
-`away_wins = df_footy_filtered[df_footy_filtered['AwayGoals'] > df_footy_filtered['HomeGoals']]
-away_win_counts = away_wins['Away'].value_counts()`
-
-5. Adds the home and away win for each teams, uses fill_value to ensure any teams that only appear in one are still counted and then converts the combined totals into integers
-
-`total_wins = home_win_counts.add(away_win_counts, fill_value=0).astype(int)`
-
-6. Converts the total_wins into a new dataframe renaming the columns to 'team' and 'wins'
-
-`df_team_wins = total_wins.reset_index()
-df_team_wins.columns = ['team', 'wins']`
-
-7. Sorts the teams in descending order based on number of wins and then restes the index to give clean, consecutive numbering
-
-`df_team_wins = df_team_wins.sort_values(by='wins', ascending=False).reset_index(drop=True)`
-
-8. Filters the Guardian dataframe to ensure consistency of timelines
-
-`df_2023 = df[(df['year'] >= 2015) & (df['year'] <= 2023)]`
-
-9. Displays the top 5 teams with the most wins from the filtered football dataset
-
-`df_team_wins.head()`
 
 
-# Premier League visualisation
-
-1. Creates a dictionary called patters where each key is a football team and the value is a regex pattern that matches common variations and also not case sensitive as a result of re.IGNORECASE
-
-`patterns = {
-    'Arsenal': re.compile(r'\bArsenal\b|\bGunners\b', re.IGNORECASE),
-    'Aston Villa': re.compile(r'\bAston Villa\b|\bVilla\b', re.IGNORECASE),
-    'Bournemouth': re.compile(r'\bBournemouth\b|\bCherries\b', re.IGNORECASE),
-    'Brentford': re.compile(r'\bBrentford\b|\bBees\b', re.IGNORECASE),
-    'Brighton': re.compile(r'\bBrighton\b|\bSeagulls\b', re.IGNORECASE),
-    'Burnley': re.compile(r'\bBurnley\b|\bClarets\b', re.IGNORECASE),
-    'Cardiif City': re.compile(r'\bCardiff\b|\bBluebirds\b', re.IGNORECASE),
-    'Chelsea': re.compile(r'\bChelsea\b|\bBlues\b', re.IGNORECASE),
-    'Crystal Palace': re.compile(r'\bCrystal Palace\b|\bEagles\b', re.IGNORECASE),
-    'Everton': re.compile(r'\bEverton\b|\bToffees\b', re.IGNORECASE),
-    'Fulham': re.compile(r'\bFulham\b|\bCottagers\b', re.IGNORECASE),
-    'Hull City': re.compile(r'\bHull\b|\bTigers\b', re.IGNORECASE),
-    'Huddersfield Town': re.compile(r'\bHuddersfield\b|\bTerriers\b', re.IGNORECASE),
-    'Leeds United': re.compile(r'\bLeeds\b|\bLeeds United\b', re.IGNORECASE),
-    'Leicester City': re.compile(r'\bLeicester\b|\bFoxes\b', re.IGNORECASE),
-    'Liverpool': re.compile(r'\bLiverpool\b|\bReds\b', re.IGNORECASE),
-    'Manchester City': re.compile(r'\bManchester City\b|\bCity\b', re.IGNORECASE),
-    'Manchester United': re.compile(r'\bManchester United\b|\bUnited\b|\bRed Devils\b', re.IGNORECASE),
-    'Middlesbrough': re.compile(r'\bMiddlesbrough\b|\bBoro\b', re.IGNORECASE),
-    'Newcastle United': re.compile(r'\bNewcastle\b|\bMagpies\b', re.IGNORECASE),
-    'Norwich City': re.compile(r'\bNorwich\b|\bCanaries\b', re.IGNORECASE),
-    'Nottingham Forest': re.compile(r'\bNottingham Forest\b|\bForest\b', re.IGNORECASE),
-    'Sheffield United': re.compile(r'\bSheffield United\b|\bBlades\b', re.IGNORECASE),
-    'Southampton': re.compile(r'\bSouthampton\b|\bSaints\b', re.IGNORECASE),
-    'Stoke City': re.compile(r'\bStoke\b|\bPotters\b', re.IGNORECASE),
-    'Sunderland': re.compile(r'\bSunderland\b|\bBlack Cats\b', re.IGNORECASE),
-    'Swansea City': re.compile(r'\bSwansea\b|\bSwans\b', re.IGNORECASE),
-    'Tottenham Hotspur': re.compile(r'\bTottenham\b|\bSpurs\b', re.IGNORECASE),
-    'Watford': re.compile(r'\bWatford\b|\bHornets\b', re.IGNORECASE),
-    'West Brom': re.compile(r'\bWest Brom\b|\bBaggies\b', re.IGNORECASE),
-    'West Ham United': re.compile(r'\bWest Ham\b|\bHammers\b', re.IGNORECASE),
-    'Wolves': re.compile(r'\bWolves\b|\bWolverhampton\b', re.IGNORECASE)
-}`
-
-2. Initialise a dictionary that defaults all values to 0 so we can increment mention counts for each term easilt
-
-`mention_counts = defaultdict(int)`
-
-3.Goes through each headline in our DataFrame, checking if each team appears in the headline using regex and if it does adds 1 to that team's mention count.
-
-`for headline in df_2023['headline']:
-    for team, pattern in patterns.items():
-        if pattern.search(headline):
-            mention_counts[team] += 1`
-
-4. Converts the dictionary of mention counts into a new DataFrame with columns 'team' and 'mentions'
-
-`df_mentions = pd.DataFrame(list(mention_counts.items()), columns=['team', 'mentions'])`
-
-5. Sorts the teams from most mentioned to least mentioned
-   
-`df_mentions = df_mentions.sort_values(by='mentions', ascending=False)`
-
-6. Extracts and sorts a list of all unique team names from the wins DataFrame
-
-`all_teams = sorted(df_team_wins['team'].unique())`
-
-7. Generates a unique colour for each team using a Seaborn colour palette and then stores the team color pairs in a dictionary for consistent colour usage across plots
-
-`team_colors = sns.color_palette("hsv", len(all_teams))
-color_dict = {team: color for team, color in zip(all_teams, team_colors)}`
-
-8. Sets a spacing value to slightly offset spacing labels
-
-`offset = 3`
-
-9. Creates a new figure for plotting the total wins, with a custom size
-
-`plt.figure(figsize=(12, 8))`
-
-10. Draws a smoothed black line accross the data points
-
-`sns.lineplot(x=df_team_wins['wins'], y=np.arange(len(df_team_wins)), ci=None, lw=2, color="black", estimator=None)`
-
-11. It draws a horrizontal line from 0 to each teams win count, then adds a circular marker at the end of the line and then annotates the marker with the win count slightly to the right
-
-`for team, wins in zip(df_team_wins['team'], df_team_wins['wins']):
-    plt.hlines(y=team, xmin=0, xmax=wins, color=color_dict[team], linewidth=2)
-    plt.plot(wins, team, "o", color=color_dict[team], markersize=8)
-    plt.text(wins + offset, team, str(wins), va='center', ha='left', fontsize=10, color='black')`
-
-12. Adds x-axis label, plot title, gridlines, x-axis ticks, adjusts layout and finally displays the plot
-     
-`plt.xlabel("Total Wins ")
-plt.title("Total Wins by Team (2015-2023)")
-plt.grid(axis='x', linestyle='--', alpha=0.5)
-plt.xticks(np.arange(0, 230, 10))
-plt.tight_layout()
-plt.show()`
-
-13. Starts a second figure
-
-`plt.figure(figsize=(12, 10))`
-
-14. Draws a smoothed line across mention points
-
-`sns.lineplot(x=df_mentions['mentions'], y=np.arange(len(df_mentions)), lw=2, color="black", estimator=None, errorbar=None)`
-
-15.Makes sure all teams in mentions have a corresponding colour if not grey as a fallback
-
-`for team in df_mentions['team']:
-    if team not in color_dict:
-        color_dict[team] = 'grey'`
-
-16. Simularly to our other plot, draws a horizontal line for each team and adds a marker and a label with the mentions count
-
-`for team, mentions in zip(df_mentions['team'], df_mentions['mentions']):
-    plt.hlines(y=team, xmin=0, xmax=mentions, color=color_dict[team], linewidth=2)
-    plt.plot(mentions, team, "o", color=color_dict[team], markersize=8)
-    plt.text(mentions + offset, team, str(mentions), va='center', ha='left', fontsize=10, color='black')`
-
-17. Adds labels, title, grid and x-axis ticks for the mention count. Then does final layout cleaning and displays plot
-
-`plt.xlabel("Number of Mentions in Headlines ")
-plt.title("Premier League Team Mentions in Headlines (2013-2023) ", fontsize=14)
-plt.grid(axis='x', linestyle='--', alpha=0.5)
-plt.xticks(np.arange(0, 190, 10))
-plt.tight_layout()
-plt.show()`
 
 
 
