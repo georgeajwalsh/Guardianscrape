@@ -255,38 +255,7 @@ sns.despine(top=True, right=True, ax=axes[1])`
 `plt.tight_layout()
 plt.show()`
 
-# Word Cloud [Output 3]
 
-1. Imports the Word Class and the built-in list of STOPWORDS from the word cloud library
-
-`from wordcloud import WordCloud, STOPWORDS`
-
-2. Merges all non-empty headlines into a single string with each headline being separated by a space
-
-`text = " ".join(headline for headline in df['headline'].dropna())`
-
-3. Converts the default set of stop words into a Python set and then adds additional specific common words that are not useful to our analysis
-
-`stopwords = set(STOPWORDS)
-stopwords.update(["s", "said", "mr", "mrs",
-                  "says","will","happened","review",
-                  "quick","U","new","crossword", "Cryptic",""
-                  "day","call","year"])`
-
-4. Creates a Word Cloud object with specified width, height, white background, the cleaned list of stop words, and a colour map (viridis)
-
-`wordcloud = WordCloud(width=800, height=400,
-                      background_color='white',
-                      stopwords=stopwords,
-                      colormap='viridis').generate(text)`
-
-5. Sets up a plot with size 10x5, displays the word cloud using bilinear interpolation, removed axis for cleaner look, adds a title and then renders the final word cloud using plt.show()
-
-`plt.figure(figsize=(10, 5))
-plt.imshow(wordcloud, interpolation='bilinear')
-plt.axis('off')
-plt.title('Most Frequent Words in Headlines (2013-2023)')
-plt.show()`
 
 # Premier League data import [Output 4]
 
