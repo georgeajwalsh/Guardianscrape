@@ -114,7 +114,7 @@ else:
 
 `print("Data collection complete!")`
 
-# Data Distribution
+# Data Distribution [Output 2]
 
 1.Import pandas for data manipulation, matplotlib.pyploy for plotting, seaborn for statistical plots and NumPy for numerical operations
 
@@ -256,7 +256,7 @@ sns.despine(top=True, right=True, ax=axes[1])`
 `plt.tight_layout()
 plt.show()`
 
-# Word Cloud
+# Word Cloud [Output 3]
 
 1. Imports the Word Class and the built-in list of STOPWORDS from the word cloud library
 
@@ -289,7 +289,7 @@ plt.axis('off')
 plt.title('Most Frequent Words in Headlines (2013-2023)')
 plt.show()`
 
-# Premier League data import
+# Premier League data import [Output 4]
 
 1. Loads the Premier League match data from csv into our data frame
 
@@ -331,7 +331,7 @@ df_team_wins.columns = ['team', 'wins']`
 `df_team_wins.head()`
 
 
-# Premier League visualisation
+# Premier League visualisation [Output 5]
 
 1. Creates a dictionary called patters where each key is a football team and the value is a regex pattern that matches common variations and not case sensitive as a result of re.IGNORECASE
 
@@ -495,22 +495,32 @@ plt.grid(True, linestyle='--', alpha=0.5)
 plt.tight_layout()
 plt.show()`
 
+23. Calculates the Pearson correlation coefficient between our columns
 
-# Calculate and print correlation
-correlation = df_combined['wins'].corr(df_combined['mentions'])
-print(f"\nCorrelation between wins and mentions: {correlation:.3f}")
+`correlation = df_combined['wins'].corr(df_combined['mentions'])`
 
-# Interpretation
-if abs(correlation) > 0.7:
+24. Prints the correlation value rounded to three decimal place
+
+`print(f"\nCorrelation between wins and mentions: {correlation:.3f}")`
+
+25. Judges the strength of our correlation
+
+`if abs(correlation) > 0.7:
     strength = "strong"
 elif abs(correlation) > 0.3:
     strength = "moderate"
 else:
-    strength = "weak"
+    strength = "weak"`
 
-direction = "positive" if correlation > 0 else "negative"
-print(f"This indicates a {strength} {direction} correlation between team wins and media mentions.")
-# Import of GDP data [OUTPUT 3]
+26. Checks the sign of the correlation
+
+`direction = "positive" if correlation > 0 else "negative"`
+
+27. Prints the result
+
+`print(f"This indicates a {strength} {direction} correlation between team wins and media mentions.")`
+
+# Import of GDP data [OUTPUT 6]
 
 
 1.This calls the GDP.csv by locating it within my file directory skipping 4 rows as these are empty saving to df_gdp.
@@ -534,7 +544,7 @@ df_gdp_cleaned[gdp_columns] = df_gdp_cleaned[gdp_columns].apply(pd.to_numeric, e
 
 `df_gdp_cleaned.head()`
 
-# Visualisation country mentions against total GDP [OUTPUT 3]
+# Visualisation country mentions against total GDP [OUTPUT 7]
 
 
 1. Imports given we have already imported most packages only need import lowess this function is used for stats models in our case it’s for a smoothest line of best fit.
@@ -639,7 +649,7 @@ plt.grid(axis='y', alpha=0.3)`
 plt.tight_layout()
 plt.show()`
 
-# War datafarme import [OUTPUT 4]
+# War datafarme import [OUTPUT 8]
 
 
 1. Utilises the pandas function to read the CSV into the df_war data frame, skipping the first 4 rows of the file 
@@ -782,7 +792,7 @@ ax2.grid(axis='y', linestyle=':', alpha=0.5)`
 `plt.tight_layout()
 plt.show()`
 
-# Political party data import [OUTPUT 6]
+# Political party data import [OUTPUT 9]
 
 1.This reads the excel file indicating the headers are in row 9
 
@@ -826,7 +836,7 @@ plt.show()`
 `df_2021= df[df['year'] <= 2021]`
 
 
-# Visualisation of party votes against party mentions [OUTPUT 6]
+# Visualisation of party votes against party mentions [OUTPUT 10]
 
 1. Imports defaultdict which behaves like a normal dictionary but gives a default value(in this case, int, which is 0
 
