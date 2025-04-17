@@ -229,7 +229,6 @@ sns.despine(top=True, right=True, ax=axes[0])`
     month_data = monthly_distribution[monthly_distribution['month'] == month]['count'].dropna()
     if len(month_data) == 0:
         continue
-
     q1 = np.percentile(month_data, 25)
     q3 = np.percentile(month_data, 75)
     median = np.median(month_data)
