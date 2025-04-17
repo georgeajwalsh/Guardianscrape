@@ -1,6 +1,6 @@
 # Web scrape of Guardian Data [Output 1]
 
-1.Requests allows us to make requests to websites, import pandas as pd is useful for working with tables, import random allows us to generate random items,  import so is useful for interacting with computer, from datetime import datetime,timedelta gives us access for tools for working with dates and times.
+1. Requests allows us to make requests to websites, import pandas as pd is useful for working with tables, import random allows us to generate random items,  import so is useful for interacting with computer, from datetime import datetime,timedelta gives us access for tools for working with dates and times.
 
 `import requests
 import pandas as pd
@@ -8,7 +8,7 @@ import random
 import os
 from datetime import datetime, timedelta`
 
-2.API_KEY is the personal key that gives us access to the Guardian's content API, BASE_URL is the web address we will be pulling data from, and FILE_NAME is where we will be saving the data we collect
+2. API_KEY is the personal key that gives us access to the Guardian's content API, BASE_URL is the web address we will be pulling data from, and FILE_NAME is where we will be saving the data we collect
 
 `API_KEY = "998344a2-04a1-4410-9d53-1490cfa2e9d2"
 BASE_URL = "https://content.guardianapis.com/search"
@@ -374,7 +374,7 @@ df_team_wins.columns = ['team', 'wins']`
 
 `mention_counts = defaultdict(int)`
 
-3.Goes through each headline in our DataFrame, checking if each team appears in the headline using regex and if it does adds 1 to that team's mention count.
+3. Goes through each headline in our DataFrame, checking if each team appears in the headline using regex and if it does adds 1 to that team's mention count.
 
 `for headline in df_2023['headline']:
     for team, pattern in patterns.items():
@@ -434,7 +434,7 @@ plt.show()`
 
 `sns.lineplot(x=df_mentions['mentions'], y=np.arange(len(df_mentions)), lw=2, color="black", estimator=None, errorbar=None)`
 
-15.Makes sure all teams in mentions have a corresponding colour if not grey as a fallback
+15. Makes sure all teams in mentions have a corresponding colour if not grey as a fallback
 
 `for team in df_mentions['team']:
     if team not in color_dict:
@@ -523,7 +523,7 @@ else:
 # Import of GDP data [OUTPUT 6]
 
 
-1.This calls the GDP.csv by locating it within my file directory skipping 4 rows as these are empty saving to df_gdp.
+1. This calls the GDP.csv by locating it within my file directory skipping 4 rows as these are empty saving to df_gdp.
 
 `df_gdp = pd.read_csv('/Users/georgewalsh/Desktop/API_NY/GDP.csv', skiprows=4)  # Skip the first 4 rows which contain metadata`
 
@@ -576,7 +576,7 @@ df_gdp_cleaned[gdp_columns] = df_gdp_cleaned[gdp_columns].apply(pd.to_numeric, e
     'South Korea': ['South Korea']
 }`
 
-4.This creates an empty dictionary to store our mentions. For each country and its variants, it will create a regex pattern to match whole words only and counts how many headlines contain each variant and sums across all variants in the country storing the total in a dictionary.
+4. This creates an empty dictionary to store our mentions. For each country and its variants, it will create a regex pattern to match whole words only and counts how many headlines contain each variant and sums across all variants in the country storing the total in a dictionary.
 
 `country_mentions = {}
 for country, variants in country_variants.items():
@@ -643,7 +643,7 @@ plt.title('Total GDP of Top 12 Economies (2013-2023)')
 plt.xticks(rotation=45, ha='right')
 plt.grid(axis='y', alpha=0.3)`
 
-14.Final formatting that ensures proper spacing between subplots and displays the final visualisation
+14. Final formatting that ensures proper spacing between subplots and displays the final visualisation
 
 `plt.legend()
 plt.tight_layout()
@@ -656,7 +656,7 @@ plt.show()`
 
 `df_war =pd.read_csv('/Users/georgewalsh/Documents/battle/battledata.csv',skiprows=4)`
 
-2.This creates a new dataframe which only stores our columns of interest 
+2. This creates a new dataframe which only stores our columns of interest 
 
 `df_war_cleaned = df_war[['Country Name','2014','2015','2016','2017','2018','2019', '2020', '2021', '2022','2023']]`
 
@@ -664,11 +664,11 @@ plt.show()`
 
 `year_columns = [str(year) for year in range(2014, 2024)]`
 
-4.This adds a new total column to df_war_cleaned by summing all the year columns
+4. This adds a new total column to df_war_cleaned by summing all the year columns
 
 `df_war_cleaned['Total'] = df_war_cleaned[year_columns].sum(axis=1)`
 
-5. THis verifies it works by calling the first 5 rows
+5. This verifies it works by calling the first 5 rows
 
 `df_war_cleaned.head()`
 
@@ -680,7 +680,7 @@ plt.show()`
 `key_countries = ['Ukraine', 'Russia', 'United States', 'Sudan', 'United Kingdom',
                  'Afghanistan', 'Ethiopia', 'Iraq']`
 
-2.This accounts for all variations of the word 
+2. This accounts for all variations of the word 
 
 `country_variations = {
     'Ukraine': ['ukraine'],
@@ -701,67 +701,67 @@ plt.show()`
 
 `mention_counts = {}`
 
-5(a). This loops through each country and its variations
+5. This loops through each country and its variations
 
 `for country, variations in country_variations.items():`
 
- (b) this creates a Boolean mask for headlines containing "war" or "conflict"
+6. This creates a Boolean mask for headlines containing "war" or "conflict"
 
  `mask = df['headline_lower'].str.contains(r'\b(war|conflict)\b', case=False)`
 
- (c) This combines with another mask checking for any country variation in the text
+7. This combines with another mask checking for any country variation in the text
 
  `country_mask = mask & df['headline_lower'].apply(
         lambda text: any(variant in text for variant in variations)`
 
- (d) This counts the matches and stores in a dictionary
+8. This counts the matches and stores in a dictionary
 
  `mention_counts[country] = country_mask.sum()`
 
-6. This converts the dictionary to a Data Frame with columns Country and Mentions
+9. This converts the dictionary to a Data Frame with columns Country and Mentions
 
 `mentions_df = pd.DataFrame(list(mention_counts.items()), columns=['Country', 'Mentions'])`
 
-7. This filters the war deaths data to only include our key countries
+10. This filters the war deaths data to only include our key countries
 
 `df_war_subset = df_war_cleaned[df_war_cleaned['Country Name'].isin(key_countries)]`
 
-8. This will sort our data frame by total deaths in descending order
+11. This will sort our data frame by total deaths in descending order
 
 `df_war_subset = df_war_subset.sort_values('Total', ascending=False)`
 
-9. This creates a 2-row, 1-column figure and sets the figure size to 12x12 inches
+12. This creates a 2-row, 1-column figure and sets the figure size to 12x12 inches
 
 `fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12))`
 
-10. This plots the first total deaths plot in the colour sky blue separating by country
+13. This plots the first total deaths plot in the colour sky blue separating by country
 
 `bars1 = ax1.bar(df_war_subset['Country Name'], df_war_subset['Total'], color='skyblue')`
 
-11.This format the figure adding a title, y-axis label and faint dotted grid lines on y-axis
+14.This format the figure adding a title, y-axis label and faint dotted grid lines on y-axis
 
 `ax1.set_title('Total Deaths (2014–2023)', fontsize=14)
 ax1.set_ylabel('Total Deaths')
 ax1.grid(axis='y', linestyle=':', alpha=0.5)`
 
-12. This adds formatted value labels to each bar using the same method as before but adding thousand separators
+15. This adds formatted value labels to each bar using the same method as before but adding thousand separators
 
 `for bar in bars1:
     height = bar.get_height()
     ax1.text(bar.get_x() + bar.get_width()/2., height, f'{int(height):,}', 
              ha='center', va='bottom', fontsize=10)`
 
-13. This plots our second plot mentions reordering mentions data to match deaths plot order
+16. This plots our second plot mentions reordering mentions data to match deaths plot order
 
 `mentions_df = mentions_df[mentions_df['Country'].isin(key_countries)]
 mentions_df = mentions_df.set_index('Country').loc[df_war_subset['Country Name']].reset_index()`
 
-14. Prepare's data for smoothing by extracting x and y values
+17. Prepare's data for smoothing by extracting x and y values
 
 `x_vals = np.arange(len(mentions_df))
 y_vals = mentions_df['Mentions'].values`
 
-15. This creates a smooth trend line using spline interpolation only if there are enough data points plotted as a dash line
+18. This creates a smooth trend line using spline interpolation only if there are enough data points plotted as a dash line
 
 `if len(x_vals) > 2:
     x_smooth = np.linspace(x_vals.min(), x_vals.max(), 300)
@@ -769,25 +769,25 @@ y_vals = mentions_df['Mentions'].values`
     y_smooth = spline(x_smooth)
     ax2.plot(x_smooth, y_smooth, color='darkred', linestyle='--', linewidth=2, label='Smoothed Trend')`
 
-16. This creates bar plot of mentions in cornflower blue 
+19. This creates bar plot of mentions in cornflower blue 
 
 `bars2 = ax2.bar(mentions_df['Country'], mentions_df['Mentions'], color='cornflowerblue')`
 
-17. This formats our graph adding titles, grid lines on y axis and rotating labels for readability 
+20. This formats our graph adding titles, grid lines on y axis and rotating labels for readability 
 
 `ax2.set_title('Mentions of "War" or "Conflict" in Headlines (2013-2021)', fontsize=14)
 ax2.set_ylabel('Number of Mentions')
 ax2.set_xticklabels(mentions_df['Country'], rotation=30)
 ax2.grid(axis='y', linestyle=':', alpha=0.5)`
 
-18. This adds value labels above bars similar to first plot
+21. This adds value labels above bars similar to first plot
 
 `for bar in bars2:
     height = bar.get_height()
     ax2.text(bar.get_x() + bar.get_width()/2., height, f'{height}', 
              ha='center', va='bottom', fontsize=10)`
 
-19.Final formatting
+22. Final formatting
 
 `plt.tight_layout()
 plt.show()`
