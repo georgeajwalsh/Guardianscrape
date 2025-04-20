@@ -1,4 +1,6 @@
 # Web scrape of Guardian Data [Output 1]
+IMP0RTANT: remember it is likely you will require your own API key these are found at : https://open-platform.theguardian.com/access/
+IMPORTANT: The more times you run th code the more data you will have I did this to ensure flexability and choice between time waiting for output and the amount of values 
 
 1. Requests allows us to make requests to websites, import pandas as pd is useful for working with tables, import random allows us to generate random items,  import so is useful for interacting with computer, from datetime import datetime,timedelta gives us access for tools for working with dates and times.
 
